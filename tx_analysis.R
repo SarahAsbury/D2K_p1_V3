@@ -7,7 +7,7 @@ library(tidyverse)
 rm(list = ls())
 
 # setwd  ------------------------------------------------------------------
-setwd("/Users/sar/Dropbox/Dallas2K/PhyloseqV5/wcna/signed/minmod50")
+setwd("/Users/sar/Dropbox/Dallas2K/PhyloseqV5/wcna/covariate-corrected/signed/minmod25")
 
 # Import data -------------------------------------------------------------
 load("/Users/sar/Dropbox/Dallas2K/PhyloseqV5/Physeq_glommed_objects/physeq_ResolveGenus.RData")
@@ -22,7 +22,7 @@ meta %>% group_by(psych_tx) %>% count()
 
 
 # Import WCNA -------------------------------------------------------------
-wcna <- read.csv("/Users/sar/Dropbox/Dallas2K/PhyloseqV5/wcna/signed/minmod50/eigentaxa.csv") %>% rename(StudyID = X)
+wcna <- read.csv("/Users/sar/Dropbox/Dallas2K/PhyloseqV5/wcna/covariate-corrected/signed/minmod25/eigentaxa.csv") %>% rename(StudyID = X)
 # Subgroup analysis -------------------------------------------------------
 #inspect datasets
 head(meta)
@@ -37,5 +37,4 @@ tiff("brown_TxSubgroup.tiff", width = 1500, height = 1500 , res = 300)
 ggboxplot(data = df, x = "psych_tx", y = "MEbrown", color = "psych_tx", add = "jitter") +
           stat_compare_means(method = "wilcox.test")
 dev.off()
-
 
