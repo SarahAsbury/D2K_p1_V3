@@ -891,7 +891,6 @@ print("GAD7 vs. PHQ9")
 cor.test(datTraits$gad7_total, datTraits$phq9_total, method = "pearson")
 print("GAD7 vs. DARS")
 cor.test(datTraits$gad7_total, datTraits$dars17_total, method = "pearson")
-
 print("BMI vs. age")
 cor.test(datTraits$BMI, datTraits$age, method = "pearson")
 print("BMI vs. gad7")
