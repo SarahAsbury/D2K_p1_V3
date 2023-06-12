@@ -25,6 +25,7 @@ library(janitor)
 library(microbiome)
 library(RCy3)
 library(Hmisc)
+library(retainresolve)
 
 # Clear Environment -------------------------------------------------------
 rm(list = ls())
@@ -749,7 +750,9 @@ module_stability <- function(data.input = datExpr_parent,
 # Function - Visualize Network - cytoscape -----------------------------------------------
 cyto_fun <- function(module,
                      r = 0.4,
-                     netname){
+                     netname,
+                     taxa.relevel = FALSE #include only genus in taxa information
+                     ){
   print(cytoscapePing ())
   print(cytoscapeVersionInfo ())
   #Setup datasets (univeral for any module)
@@ -770,15 +773,28 @@ cyto_fun <- function(module,
   rmtaxa <- rowSums(cor.module) %>% data.frame() %>% rename (corsums = ".") %>% filter(corsums == 1) %>% rownames()
   cor.module <- cor.module %>% select(-rmtaxa) %>%
     rownames_to_column(var = "taxa") %>% filter(!(taxa %in% rmtaxa)) %>% column_to_rownames(var = "taxa")
+  
+  #Rename taxa 
+  if(taxa.relevel == TRUE){
+    taxa <- data.frame(full = colnames(cor.module),
+                       abbrev = sp_genus(dat_glom, taxa = colnames(cor.module)))
+    
+    if((colnames(cor.module) == rownames(cor.module)) %>% all){
+      colnames(cor.module) <- taxa$abbrev
+      rownames(cor.module) <- taxa$abbrev
+      
+      #export abbreviated and full taxa names for reference
+      write.csv(x = taxa, file = "cytoscape-taxakey.csv", row.names = FALSE)
+    }
+    else{
+      warning("Taxa relevel failed")
+    }
+  }
 
   #== Cytoscape visualization ==
   net <- igraph::graph_from_adjacency_matrix(cor.module %>% as.matrix(), weighted=T, mode="undirected", diag=F)
   createNetworkFromIgraph(net, paste(module, netname, r, sep = "_"))
 }
-
-
-
-
 
 
 
@@ -1086,6 +1102,16 @@ hub_taxa_density(df = clr, taxa = brown.hub %>% select(taxa),
                  textsize = 10
 )
 
+hub_taxa_density(df = clr, taxa = brown.hub %>% select(taxa),
+                 module = "brown_clr_vertical", export_params = c(2300, #width
+                                                     1600, #height
+                                                     300, #res
+                                                     1), #ncol
+                 hex = hubhex,
+                 textsize = 10
+)
+
+
 
 # Import stability data ---------------------------------------------------------
 stabimport <- function(df){
@@ -1300,7 +1326,7 @@ datTraits_age <- clr %>% select(numeric_trait) %>% covariate.filter %>%
   as.matrix() %>% as.data.frame() %>% column_to_rownames(var = "Sample") %>% mutate_all(as.numeric)
 
 #number of samples
-  #n = 163; 22aug22
+  #n = 163; 22aug22 
 datExpr_age %>% nrow
 datTraits_age %>% nrow
 
@@ -1362,10 +1388,18 @@ write.csv(MEs, "eigentaxa.csv")
   # = Export network vis to cytoscape =
 run_covar_cytoscape = FALSE
 if(run_covar_cytoscape == TRUE){
-cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.4)
-cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.35)
-cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.2)
-}
+  cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.4)
+  cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.35)
+  cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.2)
+  
+  #for poster
+  cyto_fun(module = "brown", netname = "signed_adjusted_mindmod25", r = 0.35, taxa.relevel = TRUE)
+
+  }
+
+
+
+
 
 # === Plot stability graphs ===
 setwd(parent.dir)
@@ -1424,6 +1458,14 @@ hub_taxa_density(df = clr_adj, taxa = brown.hub %>% select(taxa),
                  textsize = 11
 )
 
+hub_taxa_density(df = clr_adj, taxa = brown.hub %>% select(taxa),
+                 module = "brown_clr_vertical", export_params = c(1500, #width
+                                                     3000, #height
+                                                     300, #res
+                                                     1), #ncol
+                 hex = hubhex,
+                 textsize = 11
+)
 
 
 
